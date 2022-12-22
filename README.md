@@ -16,8 +16,6 @@ If you have data in ElasticSearch in real time and need to be alerted when certa
 ## Telk-Alert
 Telk-Alert is an application that performs searches by query string in ElasticSearch, and when it finds results, send those results to a Telegram channel.
 
-![Telk-Alert](https://github.com/erickrr-bd/Telk-Alert/blob/master/screens/screen2.jpg)
-
 Characteristics:
 - The connection with ElasticSearch can be done through HTTPS and HTTP authentication (It must be configured in ElasticSearch).
 - You can enable or not the validation of the SSL certificate.
@@ -36,8 +34,6 @@ Characteristics:
 ## Telk-Alert-Tool
 Telk-Alert-Tool is a graphical application that allows the management of the Telk-Alert and Telk-Alert-Agent configuration, the alert rules, as well as the Telk-Alert and Telk-Alert-Agent service, all this in an easy way for the user.
 
-![Telk-Alert-Tool](https://github.com/erickrr-bd/Telk-Alert/blob/master/screens/screen1.jpg)
-
 Characteristics:
 - Creation and modification of the Telk-Alert and Telk-Alert-Agent configuration file.
 - Alert rules can be created, modified, deleted, or viewed.
@@ -49,8 +45,6 @@ Characteristics:
 ## Telk-Alert-Agent
 Telk-Alert-Agent is an application that validates the status of the Telk-Alert service every minute and alerts in case it has stopped for any reason.
 
-![Telk-Alert-Agent](https://github.com/erickrr-bd/Telk-Alert/blob/master/screens/screen3.jpg)
-
 Characteristics:
 - Validate the status of the Telk-Alert service every minute.
 - In case the service stops or fails for any reason, an alert every minute is sent until the service starts again.
@@ -59,56 +53,42 @@ Characteristics:
 - Generation of application logs.
 
 # Requirements
-- CentOS 8 or Red Hat 8 (So far it has only been tested in this version)
-- ElasticSearch 7.x 
+- Rocky Linux 8, CentOS 8 or Red Hat 8
+- ElasticSearch 7.x
 - Python 3.6
 - Python Libraries
-  - elasticsearch
-  - elasticsearch-dsl
-  - requests
-  - pycurl
-  - pythondialog
-  - pycryptodome
-  - pyyaml
+  - libPyElk
+  - libPyDialog
+  - libPyTelegram
+  - libPyUtils
+  - libPyLog
 
 # Installation
-To install or update Telk-Alert you must run the script "installer_telk_alert.sh" for this you can use any of the following commands:
+To install or update DI-Alert you must run the bash script "installer_di_alert.sh" for this you can use any of the following commands:
 
 `./installer_telk_alert.sh` or `sh installer_telk_alert.sh`
 
 The installer performs the following actions on the computer:
 
-- Download the libraries and packages necessary for the operation of Telk-Alert (if so indicated).
-- Copy and creation of directories and files necessary for the operation of Telk-Alert.
-- Creation of user and specific group for the operation of Telk-Alert.
-- It changes the owner of the files and directories necessary for the operation of Telk-Alert, assigning them to the user created for this purpose.
+- Download the libraries and packages necessary for the operation of DI-Alert (if so indicated).
+- Copy and creation of directories and files necessary for the operation of DI-Alert.
+- Creation of user and specific group for the operation of DI-Alert (di_alert).
+- It changes the owner of the files and directories necessary for the operation of DI-Alert, assigning them to the user created for this purpose.
 - Creation of passphrase for the encryption and decryption of sensitive information, which is generated randomly, so it is unique for each installed Telk-Alert installation.
 - Creation of Telk-Alert and Telk-Alert-Agent services.
 - Creation of the alias for the execution of Telk-Alert-Tool.
 - Creation of the /var/log/Telk-Alert directory where the application logs are generated.
 
 # Running
-## Telk-Alert
+## DI-Alert
 
-- Run as service:
+`systemctl start di-alert.service`
 
-`systemctl start telk-alert.service`
+## DI-Alert-Agent
 
-- To execute manually, first you must go to the path /etc/Telk-Alert-Suite/Telk-Alert and execute using the following commands:
+`systemctl start di-alert-agent.service`
 
-`python3 Telk_Alert.py` or `./Telk_Alert.py`
-
-## Telk-Alert-Agent
-
-- Run as service:
-
-`systemctl start telk-alert-agent.service`
-
-- To execute manually, first you must go to the path /etc/Telk-Alert-Suite/Telk-Alert-Agent and execute using the following commands:
-
-`python3 Telk_Alert_Agent.py` or `./Telk_Alert_Agent.py`
-
-## Telk-Alert-Tool
+## DI-Alert-Tool
 
 - The first way to run Telk-Alert-Tool, you must go to the path /etc/Telk-Alert-Suite/Telk-Alert-Tool and execute using the following commands:
 
