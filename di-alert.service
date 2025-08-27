@@ -1,11 +1,11 @@
 [Unit]
-Description=DI-Alert v3.1 by Erick Rodriguez
+Description=DI-Alert v3.2
 After=networking.target
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-ExecStart=/etc/DI-Alert-Suite/DI-Alert/DI_Alert.py
+ExecStart=/opt/DI-Alert-Suite/DI-Alert/DI_Alert.py
 User=di_alert
 Restart=on-failure
 RestartSec=1
