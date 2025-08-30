@@ -9,6 +9,7 @@ from libPyUtils import libPyUtils
 from libPyDialog import libPyDialog
 from .Constants_Class import Constants
 from .Configuration_Class import Configuration
+from .Index_Validator_Class import IndexValidator
 from libPyConfiguration import libPyConfiguration
 from libPyAgentConfiguration import libPyAgentConfiguration
 
@@ -81,7 +82,8 @@ class DIAlertTool:
 			case 2:
 				self.configuration_menu()
 			case 3:
-				print("Hola")
+				index_validator = IndexValidator()
+				index_validator.index_validator()
 			case 4:
 				self.service_menu()
 			case 5:
@@ -294,7 +296,7 @@ class DIAlertTool:
 		Method that displays the about of the application.
 		"""
 		try:
-			text = "\nAuthor: Erick Roberto Rodríguez Rodríguez\nEmail: erickrr.tbd93@gmail.com, erodriguez@tekium.mx\nGithub: https://github.com/erickrr-bd/DI-Alert\nDI-Alert v3.2 - August 2025" + "\n\nPython tool that audits and validates the integrity of\ndocuments ingested in an Elasticsearch index."
+			text = "\nAuthor: Erick Roberto Rodríguez Rodríguez\nEmail: erickrr.tbd93@gmail.com, erodriguez@tekium.mx\nGithub: https://github.com/erickrr-bd/DI-Alert\nDI-Alert v3.2 - September 2025" + "\n\nPython tool that audits and validates the integrity of\ndocuments ingested in an Elasticsearch index."
 			self.dialog.create_scrollbox(text, 13, 60, "About")
 		except KeyboardInterrupt:
 			pass

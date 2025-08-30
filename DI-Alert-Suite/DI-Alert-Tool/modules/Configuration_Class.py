@@ -31,7 +31,7 @@ class Configuration:
 
 	def define_index_pattern(self) -> None:
 		"""
-		Method that defines the index pattern(s).
+		Method that defines the Index Pattern(s).
 		"""
 		total_index_pattern = self.dialog.create_integer_inputbox("Enter the total number of Index Pattern:", 8, 50, "1")
 		tuple_to_form = self.utils.generate_tuple_to_form(int(total_index_pattern), "Index Pattern")
@@ -108,7 +108,7 @@ class Configuration:
 
 	def modify_timestamp_field(self) -> None:
 		"""
-		Method that modifies the name of the field corresponding to the index timestamp.
+		Method that modifies the field's name corresponding to the index timestamp.
 		"""
 		self.timestamp_field = self.dialog.create_inputbox("Enter the field's name that corresponds to the index timestamp:", 9, 50, self.timestamp_field)
 		self.logger.create_log(f"Timestamp's field modified: {self.timestamp_field}", 3, "_modifyDAConfiguration", use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
@@ -135,7 +135,7 @@ class Configuration:
 
 	def modify_execution_time(self) -> None:
 		"""
-		Method that defines the modifies at which the index pattern validation will be executed.
+		Method that modifies the time at which the index pattern validation will be executed.
 		"""
 		old_execution_time = self.execution_time.split(':')
 		selected_time = self.dialog.create_time("Select the time:", 2, 50, int(old_execution_time[0]), int(old_execution_time[1]))
@@ -255,7 +255,7 @@ class Configuration:
 
 	def display_configuration(self) -> None:
 		"""
-		Method that displays the contents of the configuration file.
+		Method that displays the configuration file's data.
 		"""
 		try:
 			configuration_data = self.utils.convert_yaml_to_str(self.constants.DI_ALERT_CONFIGURATION)
