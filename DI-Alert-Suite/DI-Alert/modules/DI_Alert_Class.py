@@ -1,119 +1,190 @@
-from threading import Thread
-from datetime import datetime
+"""
+Class that manages the operation of DI-Alert.
+"""
+from os import path
 from libPyLog import libPyLog
 from libPyElk import libPyElk
-from time import sleep, strftime
+from time import strftime, sleep
 from libPyUtils import libPyUtils
 from .Constants_Class import Constants
 from libPyTelegram import libPyTelegram
+from dataclasses import dataclass, field
+from libPyConfiguration import libPyConfiguration
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.background import BackgroundScheduler
 
-"""
-Class that manages everything related to DI-Alert.
-"""
+@dataclass
 class DIAlert:
 
-	def __init__(self):
+	def __init__(self) -> None:
 		"""
-		Method that corresponds to the constructor of the class.
+		Class constructor.
 		"""
-		self.__logger = libPyLog()
-		self.__utils = libPyUtils()
-		self.__constants = Constants()
-		self.__telegram = libPyTelegram()
-		self.__elasticsearch = libPyElk()
+		self.logger = libPyLog()
+		self.utils = libPyUtils()
+		self.constants = Constants()
+		self.elasticsearch = libPyElk()
+		self.telegram = libPyTelegram()
+		self.scheduler = BackgroundScheduler()
+		self.scheduler.start()
 
 
-	def startDIAlert(self):
+	def run_as_daemon(self) -> None:
 		"""
-		Method that starts the application.
+		Method that runs the application as a daemon.
 		"""
-		self.__logger.generateApplicationLog("DI-Alert v3.1", 1, "__start", use_stream_handler = True)
-		self.__logger.generateApplicationLog("@2022 Tekium. All rights reserved.", 1, "__start", use_stream_handler = True)
-		self.__logger.generateApplicationLog("Author: Erick Rodriguez", 1, "__start", use_stream_handler = True)
-		self.__logger.generateApplicationLog("Email: erodriguez@tekium.mx, erickrr.tbd93@gmail.com", 1, "__start", use_stream_handler = True)
-		self.__logger.generateApplicationLog("License: GPLv3", 1, "__start", use_stream_handler = True)
-		self.__logger.generateApplicationLog("DI-Alert started", 1, "__start", use_stream_handler = True)
 		try:
-			di_alert_data = self.__utils.readYamlFile(self.__constants.PATH_DI_ALERT_CONFIGURATION_FILE)
-			self.__logger.generateApplicationLog("Configuration file found in: " + self.__constants.PATH_DI_ALERT_CONFIGURATION_FILE, 1, "__readConfigurationFile", use_stream_handler = True)
-			if di_alert_data["use_authentication_method"] == True:
-				if di_alert_data["authentication_method"] == "API Key":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchAPIKey(di_alert_data, self.__constants.PATH_KEY_FILE)
-				elif di_alert_data["authentication_method"] == "HTTP Authentication":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchHTTPAuthentication(di_alert_data, self.__constants.PATH_KEY_FILE)
-			else:
-				conn_es = self.__elasticsearch.createConnectionToElasticSearchWithoutAuthentication(di_alert_data)
-			self.__logger.generateApplicationLog("Established connection with: " + ",".join(di_alert_data['es_host']) + " Port: " + str(di_alert_data['es_port']), 1, "__connection" , use_stream_handler = True)
-			self.__logger.generateApplicationLog("Elasticsearch Cluster Name: " + conn_es.info()["cluster_name"], 1, "__connection", use_stream_handler = True)
-			self.__logger.generateApplicationLog("Elasticsearch Version: " + conn_es.info()["version"]["number"], 1, "__connection", use_stream_handler = True)
-			time_execution = di_alert_data["time_execution"].split(':')
-			for index_pattern in di_alert_data["index_pattern_es"]:
-				self.__logger.generateApplicationLog("Index pattern load.", 1, "__" + index_pattern, use_stream_handler = True)
-				Thread(name = index_pattern, target = self.__startIndexPatternValidator, args = (conn_es, index_pattern, time_execution, )).start()
-		except KeyError as exception:
-			self.__logger.generateApplicationLog("Key Error: " + str(exception), 3, "__start", use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		except ValueError as exception:
-			self.__logger.generateApplicationLog("Error to encrypt or decrypt the data. For more information, see the logs.", 3, "__start", use_stream_handler = True)
-			self.__logger.generateApplicationLog(exception, 3, "__start", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		except (FileNotFoundError, OSError, IOError) as exception:
-			self.__logger.generateApplicationLog("Error when executing an action on a file or folder. For more information, see the logs.", 3, "__start", use_stream_handler = True)
-			self.__logger.generateApplicationLog(exception, 3, "__start", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		except (self.__elasticsearch.exceptions.AuthenticationException, self.__elasticsearch.exceptions.ConnectionError, self.__elasticsearch.exceptions.AuthorizationException, self.__elasticsearch.exceptions.RequestError, self.__elasticsearch.exceptions.ConnectionTimeout, self.__elasticsearch.exceptions.TransportError) as exception:
-			self.__logger.generateApplicationLog("Error connecting with ElasticSearch. For more information, see the logs.", 3, "__connection", use_stream_handler = True)
-			self.__logger.generateApplicationLog(exception, 3, "__connection", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
+			self.start_di_alert()
+			while True:
+				sleep(60)
+		except (KeyboardInterrupt, SystemExit)  as exception:
+			self.scheduler.shutdown()
+			self.logger.create_log("DI-Alert daemon stopped", 2, "_daemon", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
 
 
-	def __startIndexPatternValidator(self, conn_es, index_pattern_name, time_execution):
+	def start_di_alert(self) -> None:
 		"""
-		Method that performs the search for version changes of the documents of a specific index pattern.
-
-		:arg conn_es (object): Object that contains a connection to ElasticSearch.
-		:arg index_pattern_name (string): Index pattern's name.
-		:arg time_execution (array): Time of execution of the data integrity validation.
+		Method that starts DI-Alert.
 		"""
-		while True:
-			now = datetime.now()
-			if now.hour == int(time_execution[0]) and now.minute == int(time_execution[1]):
-				list_documents_version_changes = self.__elasticsearch.getDocumentsVersionChangeinIndexPattern(conn_es, index_pattern_name, "now-7d/d", "now/d")
-				if list_documents_version_changes:
-					self.__logger.generateApplicationLog("Changes were found in the index pattern's documents", 1, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-					for document in list_documents_version_changes:
-						message_telegram = self.__generateTelegramMessage(document)
-						response_http_code = self.__telegram.sendMessageTelegram(telegram_bot_token, telegram_chat_id, message_telegram)
-						self.__createLogByTelegramCode(response_http_code)
+		try:
+			self.logger.create_log("Author: Erick Roberto Rodríguez Rodríguez", 2, "_start", use_stream_handler = True)
+			self.logger.create_log("Email: erickrr.tbd93@gmail.com, erodriguez@tekium.mx", 2, "_start", use_stream_handler = True)
+			self.logger.create_log("Github: https://github.com/erickrr-bd/DI-Alert", 2, "_start", use_stream_handler = True)
+			self.logger.create_log("DI-Alert v3.2 - September 2025", 2, "_start", use_stream_handler = True)
+			if path.exists(self.constants.ES_CONFIGURATION):
+				self.logger.create_log(f"ES Configuration found: {self.constants.ES_CONFIGURATION}", 2, "_readESConfiguration", use_stream_handler = True)
+				configuration = libPyConfiguration()
+				data = self.utils.read_yaml_file(self.constants.ES_CONFIGURATION)
+				configuration.convert_dict_to_object(data)
+				if configuration.use_authentication:
+					if configuration.authentication_method == "HTTP Authentication":
+						conn_es = self.elasticsearch.create_connection_http_auth(configuration, self.constants.KEY_FILE)
+					elif configuration.authentication_method == "API Key":
+						conn_es = self.elasticsearch.create_connection_api_key(configuration, self.constants.KEY_FILE)
 				else:
-					self.__logger.generateApplicationLog("No changes were found in the index pattern's documents", 1, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-			sleep(60)
+					conn_es = self.elasticsearch.create_connection_without_auth(configuration)
+				self.logger.create_log(f"Connection established: {','.join(configuration.es_host)}", 2, "_clusterConnection", use_stream_handler = True)
+				self.logger.create_log(f"ElasticSearch Cluster Name: {conn_es.info()["cluster_name"]}", 2, "_clusterConnection", use_stream_handler = True)
+				self.logger.create_log(f"ElasticSearch Cluster UUID: {conn_es.info()["cluster_uuid"]}", 2, "_clusterConnection", use_stream_handler = True)
+				self.logger.create_log(f"ElasticSearch Version: {conn_es.info()["version"]["number"]}", 2, "_clusterConnection", use_stream_handler = True)
+				if configuration.use_authentication:
+					self.logger.create_log("Authentication enabled", 2, "_clusterConnection", use_stream_handler = True)
+					self.logger.create_log("Authentication Method: HTTP Authentication", 2, "_clusterConnection", use_stream_handler = True) if configuration.authentication_method == "HTTP Authentication" else self.logger.create_log("Authentication Method: API Key", 2, "_clusterConnection", use_stream_handler = True)
+				else:
+					self.logger.create_log("Authentication disabled. Not recommended for security reasons.", 3, "_clusterConnection", use_stream_handler = True)
+				if configuration.verificate_certificate_ssl:
+					self.logger.create_log("SSL Certificate verification enabled", 2, "_clusterConnection", use_stream_handler = True)
+					self.logger.create_log(f"SSL Certificate: {configuration.certificate_file}", 2, "_clusterConnection", use_stream_handler = True)
+				else:
+					self.logger.create_log("SSL Certificate verification disabled. Not recommended for security reasons.", 3, "_clusterConnection", use_stream_handler = True)
+				if path.exists(self.constants.DI_ALERT_CONFIGURATION):
+					self.logger.create_log(f"DI-Alert Configuration found: {self.constants.DI_ALERT_CONFIGURATION}", 2, "_readConfiguration", use_stream_handler = True)
+					di_alert_data = self.utils.read_yaml_file(self.constants.DI_ALERT_CONFIGURATION)
+					for index_pattern in di_alert_data["index_pattern"]:
+						self.logger.create_log(f"Index Pattern: {index_pattern}", 2, "_loadIndexPattern", use_stream_handler = True)
+						self.start_daily_validation(conn_es, index_pattern, di_alert_data)
+				else:
+					self.logger.create_log("DI-Alert Configuration not found.", 4, "_readConfiguration", use_stream_handler = True)
+			else:
+				self.logger.create_log("ES Configuration not found.", 4, "_readESConfiguration", use_stream_handler = True)
+		except Exception as exception:
+			self.logger.create_log("Error starting DI-Alert. For more information, see the logs.", 4, "_start", use_stream_handler = True)
+			self.logger.create_log(exception, 4, "_start", use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
 
 
-	def __generateTelegramMessage(self, document):
+	def start_daily_validation(self, conn_es, index_pattern: str, di_alert_data: dict) -> None:
 		"""
-		Method that generates the Telegram message.
+		Method that executes a task at a specific time using a cron.
 
-		Return the Telegram message.
-
-		:arg document (list): Object that contains the data of the document.
+		Parameters:
+			conn_es (ElasticSearch): A straightforward mapping from Python to ES REST endpoints.
+			index_pattern (str): Index Pattern to validate.
+			di_alert_data (dict): Object that contains the DI-Alert's configuration data.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " " + "Data Change" +  " " + u'\u26A0\uFE0F' + '\n\n' + u'\U0001f6a6' +  " Alert level: " + "High" + "\n\n" +  u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n"
-		message_telegram += u"\u270F\uFE0F" + " The data of a document has been updated and/or modified.\n\n"
-		message_telegram += u"\u2611\uFE0F" + " " + " _index" + " = " + str(document[0]) + "\n"
-		message_telegram += u"\u2611\uFE0F" + " " + " _id" + " = " + str(document[1]) + "\n"
-		message_telegram += u"\u2611\uFE0F" + " " + " _version" + " = " + str(document[2]) + "\n"
-		return message_telegram
+		execution_time = di_alert_data["execution_time"].split(':')
+		job_id = index_pattern
+		trigger = CronTrigger(hour = int(execution_time[0]), minute = int(execution_time[1]))
+		self.scheduler.add_job(self.index_pattern_validator, trigger = trigger, args = [conn_es, index_pattern, di_alert_data], id = job_id, replace_existing = True)
 
 
-	def __createLogByTelegramCode(self, response_http_code, index_pattern_name):
+	def index_pattern_validator(self, conn_es, index_pattern: str, di_alert_data: dict) -> None:
 		"""
-		Method that creates a log based on the Telegram's HTTP Code received as a response.
+		MMethod that validates the integrity of Index Pattern's documents in a defined time range.
 
-		:arg response_http_code (integer): HTTP code received in the response when sending the alert to Telegram.
-		:arg index_pattern_name (string): Index pattern's name.
+		Parameters:
+			conn_es (ElasticSearch): A straightforward mapping from Python to ES REST endpoints.
+			index_pattern (str): Index Pattern to validate.
+			di_alert_data (dict): Object that contains the DI-Alert's configuration data.
 		"""
-		if response_http_code == 200:
-			self.__logger.generateApplicationLog("Telegram message sent.", 1, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		elif response_http_code == 400:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Bad request.", 3, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		elif response_http_code == 401:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Unauthorized.", 3, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
-		elif response_http_code == 404:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Not found.", 3, "__" + index_pattern_name, use_stream_handler = True, use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG, user = self.__constants.USER, group = self.__constants.GROUP)
+		try:
+			unit_time = list(di_alert_data["range_time"].keys())[0]
+			gte = self.utils.get_gte_date(unit_time, di_alert_data["range_time"][unit_time])
+			lte = self.utils.get_lte_date(unit_time)
+			self.logger.create_log("Validation started", 2, f"_{index_pattern}", use_stream_handler = True)
+			documents = self.elasticsearch.validate_index_pattern_integrity(conn_es, index_pattern, di_alert_data["timestamp_field"], gte, lte)
+			documents = [sublist for sublist in documents if sublist]
+			if documents:
+				for document in documents:
+					self.send_telegram_message(index_pattern, di_alert_data, document)
+				self.logger.create_log(f"\nModified documents were found in the Index Pattern: {index_pattern}", 2, "_indexPatternValidation", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+			else:
+				self.logger.create_log(f"\nNo modified documents found in the Index Pattern: {index_pattern}", 2, "_indexPatternValidation", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+		except Exception as exception:
+			self.logger.create_log("Error running the job. For more information, see the logs.", 4, f"_{index_pattern}", use_stream_handler = True)
+			self.logger.create_log(exception, 4, f"_{index_pattern}", use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+
+
+	def send_telegram_message(self, index_pattern: str, di_alert_data: dict, document: list) -> None:
+		"""
+		Method that sends an alert to a Telegram channel.
+
+		Parameters:
+			index_pattern (str): Index Pattern to validate.
+			di_alert_data (dict): Object that contains the DI-Alert's configuration data.
+			document (list): List containing the data of the modified document.
+		"""
+		passphrase = self.utils.get_passphrase(self.constants.KEY_FILE)
+		telegram_bot_token = self.utils.decrypt_data(di_alert_data["telegram_bot_token"], passphrase).decode("utf-8")
+		telegram_chat_id = self.utils.decrypt_data(di_alert_data["telegram_chat_id"], passphrase).decode("utf-8")
+		telegram_message = self.generate_telegram_message(document)
+		if len(telegram_message) > 4096:
+			telegram_message = f"{u'\u26A0\uFE0F'} DI-Alert {u'\u26A0\uFE0F'}\n\n{u'\u270F\uFE0F'} The size of the message in Telegram (4096) has been exceeded. Overall size: {str(len(telegram_message))}"
+		response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
+		self.create_log_by_telegram_code(response_http_code, index_pattern)
+
+
+	def generate_telegram_message(self, document: list) -> str:
+		"""
+		Method that generates the message to be sent via Telegram.
+
+		Parameters:
+			document (list): List of modified or altered documents.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
+		"""
+		telegram_message = f"{u'\u26A0\uFE0F'} DI-Alert {u'\u26A0\uFE0F'}\n\n{u'\U0001f6a6'} Alert level: High\n\n{u'\u23F0'} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{u'\u270F\uFE0F'} Modified documents were found. Index's integrity is compromised.\n\n"
+		telegram_message += f"{u'\u2611\uFE0F'} _index = {document[0]}\n"
+		telegram_message += f"{u'\u2611\uFE0F'} _id = {document[1]}\n"
+		telegram_message += f"{u'\u2611\uFE0F'} _version = {document[2]}\n"
+		return telegram_message
+
+
+	def create_log_by_telegram_code(self, response_http_code: int, index_pattern : str) -> None:
+		"""
+		Method that generates an application log based on the HTTP response code of the Telegram API.
+
+		Parameters:
+			response_http_code (int): HTTP code returned by the Telegram API.
+			index_pattern (str): Index Pattern's name.
+		"""
+		match response_http_code:
+			case 200:
+				self.logger.create_log("Telegram message sent", 2, f"_{index_pattern}", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+			case 400:
+				self.logger.create_log("Telegram message not sent. Bad request.", 4, f"_{index_pattern}", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+			case 401:
+				self.logger.create_log("Telegram message not sent. Unauthorized.", 4, f"_{index_pattern}", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)
+			case 404:
+				self.logger.create_log("Telegram message not sent. Not found.", 4, f"_{index_pattern}", use_stream_handler = True, use_file_handler = True, file_name = self.constants.LOG_FILE, user = self.constants.USER, group = self.constants.GROUP)

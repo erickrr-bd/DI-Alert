@@ -1,28 +1,36 @@
 """
-Class that manages all the constant variables of the application.
+Class that manages the application's constants.
 """
+from dataclasses import dataclass
+
+@dataclass(frozen = True)
 class Constants:
 	"""
-	Absolute path of the DI-Alert configuration file.
+	Configuration file for the connection between ElasticSearch and DI-Alert.
 	"""
-	PATH_DI_ALERT_CONFIGURATION_FILE = "/etc/DI-Alert-Suite/DI-Alert/configuration/di_alert_conf.yaml"
+	ES_CONFIGURATION: str = "/etc/DI-Alert-Suite/DI-Alert/configuration/es_conf.yaml"
 
 	"""
-	Absolute path of the file where the key for the encryption/decryption process is stored.
+	DI-Alert's configuration file.
 	"""
-	PATH_KEY_FILE = "/etc/DI-Alert-Suite/DI-Alert/configuration/key"
+	DI_ALERT_CONFIGURATION: str = "/etc/DI-Alert-Suite/DI-Alert/configuration/di_alert.yaml"
 
 	"""
-	Absolute path of the application logs.
+	Encryption key path.
 	"""
-	NAME_FILE_LOG = "/var/log/DI-Alert/di-alert-log-"
+	KEY_FILE: str = "/etc/DI-Alert-Suite/DI-Alert/configuration/key"
 
 	"""
-	Name of the user created for the operation of the application.
+	DI-Alert-Tool log file.
 	"""
-	USER = "di_alert"
+	LOG_FILE: str = "/var/log/DI-Alert/di-alert-log"
 
 	"""
-	Name of the group created for the operation of the application.
+	Owner user.
 	"""
-	GROUP = "di_alert"
+	USER: str = "di_alert"
+
+	"""
+	Owner group.
+	"""
+	GROUP: str = "di_alert"

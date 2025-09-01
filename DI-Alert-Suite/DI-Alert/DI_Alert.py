@@ -1,14 +1,10 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3.12
 
+"""
+Main method.
+"""
 from modules.DI_Alert_Class import DIAlert
 
-"""
-Attribute that stores an object of the DIAlert class.
-"""
-di_alert = DIAlert()
-
-"""
-Main function of the application.
-"""
 if __name__ == "__main__":	
-		di_alert.startDIAlert()
+		di_alert = DIAlert()
+		di_alert.run_as_daemon()
