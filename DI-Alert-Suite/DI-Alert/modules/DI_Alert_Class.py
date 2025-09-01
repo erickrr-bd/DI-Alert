@@ -6,9 +6,9 @@ from libPyLog import libPyLog
 from libPyElk import libPyElk
 from time import strftime, sleep
 from libPyUtils import libPyUtils
+from dataclasses import dataclass
 from .Constants_Class import Constants
 from libPyTelegram import libPyTelegram
-from dataclasses import dataclass, field
 from libPyConfiguration import libPyConfiguration
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -102,9 +102,8 @@ class DIAlert:
 			di_alert_data (dict): Object that contains the DI-Alert's configuration data.
 		"""
 		execution_time = di_alert_data["execution_time"].split(':')
-		job_id = index_pattern
 		trigger = CronTrigger(hour = int(execution_time[0]), minute = int(execution_time[1]))
-		self.scheduler.add_job(self.index_pattern_validator, trigger = trigger, args = [conn_es, index_pattern, di_alert_data], id = job_id, replace_existing = True)
+		self.scheduler.add_job(self.index_pattern_validator, trigger = trigger, args = [conn_es, index_pattern, di_alert_data], id = index_pattern, replace_existing = True)
 
 
 	def index_pattern_validator(self, conn_es, index_pattern: str, di_alert_data: dict) -> None:
