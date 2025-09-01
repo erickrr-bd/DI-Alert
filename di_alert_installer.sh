@@ -39,7 +39,7 @@ echo -e "\e[1;33m---------------------------------------------------------------
 echo -e "[*] Author: Erick Roberto Rodriguez Rodriguez"
 echo -e "[*] Email: erodriguez@tekium.mx, erickrr.tbd93@gmail.com"
 echo -e "[*] GitHub: https://github.com/erickrr-bd/DI-Alert"
-echo -e "[*] Installer for DI-Alert v3.2 - August 2025\n"
+echo -e "[*] Installer for DI-Alert v3.2 - September 2025\n"
 
 echo "Do you want to install or update DI-Alert? (I/U)"
 read opc
