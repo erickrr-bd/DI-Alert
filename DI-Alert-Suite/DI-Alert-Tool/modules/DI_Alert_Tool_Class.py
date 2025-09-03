@@ -272,7 +272,7 @@ class DIAlertTool:
 		di_alert_agent_data.define_frequency_time()
 		di_alert_agent_data.define_telegram_bot_token(self.constants.KEY_FILE)
 		di_alert_agent_data.define_telegram_chat_id(self.constants.KEY_FILE)
-		di_alert_agent_data.create_file(vs_monitor_agent_data.convert_object_to_dict(), self.constants.DI_ALERT_AGENT_CONFIGURATION, self.constants.LOG_FILE, self.constants.USER, self.constants.GROUP)
+		di_alert_agent_data.create_file(di_alert_agent_data.convert_object_to_dict(), self.constants.DI_ALERT_AGENT_CONFIGURATION, self.constants.LOG_FILE, self.constants.USER, self.constants.GROUP)
 
 
 	def modify_agent_configuration(self) -> None:
