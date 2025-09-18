@@ -7,7 +7,7 @@ Allows to validate that documents within an index haven't been modified unexpect
 Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST SP 800-53, and PCI DSS.
 
 ## Features
-- Integrity verification by version field (`_version`) of documents
+- Integrity verification by documents' version field (`_version`)
 - Scheduled audit using cron or APScheduler
 - Supports running as a service/daemon on Linux and Windows
 - Modular and extensible for multiple indices or index patterns
@@ -29,6 +29,16 @@ Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST 
   - APScheduler
  
 ## Installation 
+
+The tool has its own installer, to facilitate the installation process. First, it is necessary to assign execution permissions to the di_alert_installer.sh file:
+
+`chmod +x di_alert_installer.sh`
+
+The binary is then executed as follows:
+
+`./di_alert_installer.sh`
+
+**NOTE: ** 
 
 ## Contributions
 
