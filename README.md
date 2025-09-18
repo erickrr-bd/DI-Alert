@@ -38,7 +38,7 @@ The binary is then executed as follows:
 
 `./di_alert_installer.sh`
 
-**NOTE: ** 
+**NOTE: ** The installer has two options. Option 'I' installs the application for the first time, ideal when you don't have a previous version. The 'U' option updates the version while maintaining some configuration files.
 
 ## Contributions
 
