@@ -27,10 +27,26 @@ Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST 
   - [libPyUtils v2.2](https://github.com/erickrr-bd/libPyUtils)
   - [libPyLog v2.2](https://github.com/erickrr-bd/libPyLog)
   - APScheduler
+
+## Tools
+
+### DI-Alert
+
+Automated solution that audits document integrity across multiple index patterns within Elasticsearch. Executes validations in configurable time ranges, verifying that documents haven't been modified outside of authorized flows.
+
+The tool operates at defined times, allowing its integration with audit schedules or maintenance windows. Upon detection of altered, duplicate or inconsistent version documents, it issues immediate alerts via Telegram, facilitating a timely response by the security team.
+
+Designed for regulated environments, this solution contributes to compliance with standards such as ISO 27001, NIST SP 800-92 and PCI DSS, reinforcing traceability, data governance and early incident detection.
+
+### DI-Alert-Agent
+
+### DI-Alert-Tool
+
+
  
 ## Installation 
 
-The tool has its own installer, to facilitate the installation process. First, it is necessary to assign execution permissions to the di_alert_installer.sh file:
+The tool has its own installer, to facilitate the installation process. First, it's necessary to assign execution permissions to the di_alert_installer.sh file:
 
 `chmod +x di_alert_installer.sh`
 
