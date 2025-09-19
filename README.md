@@ -21,7 +21,7 @@ Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST 
 - ElasticSearch 7.x or 8.x
 - Python 3.12+
 - Python libraries
-  - libPyElk v2.2 [https://github.com/erickrr-bd/libPyElk](https://github.com/erickrr-bd/libPyElk)
+  - libPyElk v2.2 [(https://github.com/erickrr-bd/libPyElk)](https://github.com/erickrr-bd/libPyElk)
   - [libPyDialog v2.2](https://github.com/erickrr-bd/libPyDialog)
   - [libPyConfiguration v1.0](https://github.com/erickrr-bd/libPyConfiguration)
   - [libPyAgentConfiguration v1.0](https://github.com/erickrr-bd/libPyAgentConfiguration)
