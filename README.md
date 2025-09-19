@@ -9,9 +9,11 @@ Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST 
 ## Features
 - Integrity verification by documents' version field (`_version`)
 - Scheduled audit using APScheduler
-- Supports running as a service/daemon on Linux and Windows
 - Modular and extensible for multiple indices or index patterns
+- It runs each day at a specific configurable time
+- Audits index pattern documents in a configurable time range
 - Audit of a specific index
+- Supports running as a service/daemon on Linux and Windows
 - Alert via Telegram
 
 ## Requirements
@@ -40,9 +42,15 @@ Designed for regulated environments, this solution contributes to compliance wit
 
 ### DI-Alert-Agent
 
+Tool designed to continuously monitor the operational status of the DI-Alert daemon, responsible for critical notification tasks. Performs periodic verifications of availability and health of the service, detecting interruptions or failures in its execution.
+
+When the daemon isn't active, the system generates an immediate alert via Telegram, notifying the responsible team. Additionally, it executes an automatic recovery procedure, trying to restart the service in a controlled manner, in accordance with operational continuity policies.
+
 ### DI-Alert-Tool
 
+Application designed to centrally manage the configuration and operational status of the DI-Alert daemon, through an intuitive and easy-to-use graphical interface. It allows you to view, edit and validate key service parameters, as well as start, stop or restart the daemon in a controlled manner.
 
+The tool facilitates operational management in technical environments, reducing dependence on manual commands and improving change traceability. 
  
 ## Installation 
 
