@@ -8,7 +8,7 @@ Ideal tool for compliance and alignment with frameworks such as ISO 27001, NIST 
 
 ## Features
 - Integrity verification by documents' version field (`_version`)
-- Scheduled audit using cron or APScheduler
+- Scheduled audit using APScheduler
 - Supports running as a service/daemon on Linux and Windows
 - Modular and extensible for multiple indices or index patterns
 - Audit of a specific index
@@ -38,7 +38,7 @@ The binary is then executed as follows:
 
 `./di_alert_installer.sh`
 
-**NOTE: ** The installer has two options. Option 'I' installs the application for the first time, ideal when you don't have a previous version. The 'U' option updates the version while maintaining some configuration files.
+**NOTE:** The installer has two options. Option 'I' installs the application for the first time, ideal when you don't have a previous version. The 'U' option updates the version while maintaining some configuration files.
 
 ## Contributions
 
